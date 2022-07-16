@@ -1,0 +1,18 @@
+div.wrapper {
+  margin: 0 auto;
+  text-align: center;
+}
+
+video#stream {
+  width: 640px;
+}
+
+div.controls {
+  margin: 12px;
+  text-align: center;
+}
+
+div.messages {
+  text-align: left;
+  font-size: small;
+}

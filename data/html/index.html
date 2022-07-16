@@ -1,0 +1,53 @@
+<html> 
+  <head> 
+    <link rel="stylesheet" type="text/css" href="index.css">
+    <script type="text/javascript" src="https://webrtc.github.io/adapter/adapter-latest.js"></script> 
+    <script type="text/javascript" src="webrtc.js"></script> 
+    <script type="text/javascript"> 
+      window.onload = function() { 
+        let vidstream = document.getElementById("stream");
+        let config = {
+          'iceServers': [
+            { 'urls': 'stun:stun.l.google.com:19302' }
+          ]
+        };
+        webrtc.playStream(vidstream, location.hostname, 9449, null, config, (msg) => {
+          addText(msg);
+        }, (errmsg) => {
+          console.error(errmsg);
+        });
+      };
+
+      function sendDataChannel() {
+        let elem = document.getElementById('example')
+        webrtc.sendDataChannel(elem.value);
+      }
+
+      function addText(message) {
+        let elem = document.getElementById('message')
+        let text = elem.innerHTML;
+        text += '<br>'
+        text += message;
+        elem.innerHTML = text;
+      }
+
+      function clearText() {
+        let elem = document.getElementById('message')
+        elem.innerHTML = '';
+      }
+    </script> 
+  </head> 
+ 
+  <body> 
+    <div class="wrapper">
+      <!-- muted を付けることで自動再生が有効になります -->
+      <video id="stream" autoplay playsinline controls muted>Your browser does not support video</video> 
+    </div>
+    <div class="controls">
+      <input id="example" type="text" name="example">
+      <button onclick="sendDataChannel()">send</button>
+      <button onclick="clearText()">clear</button>
+      <div id="message" class="messages"></div>
+    </div>
+  </body>
+</html>

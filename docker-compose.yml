@@ -1,0 +1,25 @@
+version: '3.7'
+services:
+  signaling:
+    build:
+      context: ./signaling
+    hostname: signaling
+    container_name: signaling
+    volumes: 
+      - ./data:/opt/data
+      - ./signaling:/opt/signaling
+    network_mode: host
+  webrtc:
+    build: 
+      context: ./webrtc-sample
+    hostname: webrtc
+    container_name: webrtc
+    privileged: true
+    devices:
+      - /dev
+    network_mode: host
+    tty: true
+    depends_on:
+      - "signaling"
+    command: >
+      /opt/gst-webrtc-sample/build/gst-webrtc-sample
