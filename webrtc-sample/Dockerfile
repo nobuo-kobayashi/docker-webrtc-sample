@@ -270,3 +270,9 @@ RUN mkdir -p ${WORK_FOLDER}/gst-webrtc-sample/build \
 && cmake .. \
 && make
 
+# TURN/STUN server
+EXPOSE 3478:3478
+EXPOSE 3478:3478/udp
+EXPOSE 59000-65000:59000-65000/udp
+# ICE server
+EXPOSE 3033:3033

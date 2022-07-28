@@ -12,6 +12,9 @@ RUN cd ${WORK_FOLDER} \
 # 作業用のフォルダ指定
 WORKDIR ${WORK_FOLDER}/
 
+EXPOSE 9449
+
 # 実行
 CMD cd ${WORK_FOLDER}/signaling/src \
 && node app.js
+

@@ -8,7 +8,8 @@ services:
     volumes: 
       - ./data:/opt/data
       - ./signaling:/opt/signaling
-    network_mode: host
+    ports:
+      - "9449:9449"
   webrtc:
     build: 
       context: ./webrtc-sample
@@ -17,7 +18,12 @@ services:
     privileged: true
     devices:
       - /dev
-    network_mode: host
+    ports:
+      - "3478:3478"
+      - "3478:3478/udp"
+      - "3033:3033"
+      # 性能の低い端末だと、この個数のポートフォワーディングできない
+      # - "59000-65000:59000-65000/udp"
     tty: true
     depends_on:
       - "signaling"
