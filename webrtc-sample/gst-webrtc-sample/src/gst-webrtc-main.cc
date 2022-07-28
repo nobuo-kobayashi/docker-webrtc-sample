@@ -49,9 +49,7 @@ void WebRTCMain::startPipeline()
   // webrtcbin エレメント名前は固定にしておく必要があります
   // webrtcbin name=webrtcbin を変更する場合には、呼び出している箇所も全て変更する必要があります。
   std::string bin = "webrtcbin name=webrtcbin bundle-policy=max-bundle latency=100 stun-server=stun://stun.l.google.com:19302 \
-        v4l2src device=/dev/video0 \
-         ! image/jpeg,width=1280,height=720,framerate=30/1 \
-         ! jpegdec \
+        videotestsrc is-live=true \
          ! videoconvert \
          ! queue \
          ! vp8enc target-bitrate=10240000 deadline=1 \
