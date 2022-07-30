@@ -8,6 +8,10 @@ GStreamer 上で WebRTC を動作させるためのサンプルプログラム�
 |signaling|シグナリングサーバのサンプル|
 |webrtc-sample|WebRTC のサンプル|
 
+
+以下のページで簡単な説明がありますので、参照してください。<br>
+[https://www.gclue.jp/2022/07/gstreamer-webrtc.html](https://www.gclue.jp/2022/07/gstreamer-webrtc.html)
+
 ## ビルド
 
 以下のコマンドを実行することで、GStreamer の環境ごと作成します。
