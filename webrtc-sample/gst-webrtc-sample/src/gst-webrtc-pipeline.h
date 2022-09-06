@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 #include <gst/gst.h>
-#include <json-glib/json-glib.h>
 
 #include "gst-webrtc-data-channel.h"
 

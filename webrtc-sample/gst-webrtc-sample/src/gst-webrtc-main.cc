@@ -1,16 +1,5 @@
 #include "gst-webrtc-main.h"
 
-static gchar *get_string_from_json_object(JsonObject *object)
-{
-  JsonNode *root = json_node_init_object(json_node_alloc(), object);
-  JsonGenerator *generator = json_generator_new();
-  json_generator_set_root(generator, root);
-  gchar *text = json_generator_to_data(generator, NULL);
-  g_object_unref(generator);
-  json_node_free(root);
-  return text;
-}
-
 WebRTCMain::WebRTCMain()
 {
   mClient = nullptr;
@@ -108,84 +97,80 @@ void WebRTCMain::stopPipeline()
  */
 void WebRTCMain::praseSdpAndIce(std::string& message)
 {
-  const gchar *text = message.c_str();
+  json j = json::parse(message);
+  if (j.find("type") != j.end()) {
+    if (j["type"].is_string()) {
+      std::string type = j["type"].get<std::string>();
+      if (type.compare("sdp") == 0) {
+        if (j.find("data") != j.end()) {
+          auto data = j["data"];
+          parseSdp(data);
+        }
+      } else if (type.compare("ice") == 0) {
+        if (j.find("data") != j.end()) {
+          auto data = j["data"];
+          parseIce(data);
+        }
+      } else {
+        g_error("Unknown type. %s\n", type.c_str());
+      }
+    }
+  }
+}
 
-  JsonParser *json_parser = json_parser_new();
-  if (!json_parser_load_from_data(json_parser, text, -1, NULL)) {
-    g_error("Unknown message \"%s\", ignoring.", text);
+void WebRTCMain::parseSdp(json& data_json_object)
+{
+  if (!mPipeline) {
+    g_error("mPipeline is not initialized.\n");
     return;
   }
 
-  JsonNode *root_json = json_parser_get_root(json_parser);
-  if (!JSON_NODE_HOLDS_OBJECT(root_json)) {
-    g_error("Received message without json.\n\n");
-    g_object_unref(G_OBJECT(json_parser));
-    return;
-  }
-  JsonObject *root_json_object = json_node_get_object(root_json);
-
-  if (!json_object_has_member(root_json_object, "type")) {
-    g_error("Received message without type field.\n\n");
-    g_object_unref(G_OBJECT(json_parser));
-    return;
-  }
-  const gchar *type_string = json_object_get_string_member(root_json_object, "type");
-
-  if (!json_object_has_member(root_json_object, "data")) {
-    g_error("Received message without data field.\n\n");
-    g_object_unref(G_OBJECT(json_parser));
+  if (data_json_object.find("type") == data_json_object.end() 
+      && !data_json_object["type"].is_string()) {
+    g_error("Received SDP message without type field\n");
     return;
   }
 
-  JsonObject *data_json_object = json_object_get_object_member(root_json_object, "data");
+  if (data_json_object.find("sdp") == data_json_object.end() 
+      && !data_json_object["sdp"].is_string()) {
+    g_error("Received SDP message without SDP string\n");
+    return;
+  }
 
-  if (g_strcmp0 (type_string, "sdp") == 0) {
-    parseSdp(data_json_object);
-  } else if (g_strcmp0 (type_string, "ice") == 0) {
-    parseIce(data_json_object);
+  std::string type_string = data_json_object["type"].get<std::string>();
+  std::string sdp_string = data_json_object["sdp"].get<std::string>();
+
+  if (type_string.compare("answer") == 0) {
+    mPipeline->onAnswerReceived(sdp_string.c_str());
+  } else if (type_string.compare("offer") == 0) {
+    mPipeline->onOfferReceived(sdp_string.c_str());
   } else {
-    g_print("Received unknown type. %s\n", type_string);
-  }
-  
-  g_object_unref(G_OBJECT(json_parser));
-}
-
-void WebRTCMain::parseSdp(JsonObject *data_json_object)
-{
-  if (!json_object_has_member(data_json_object, "type")) {
-    g_error ("Received SDP message without type field\n");
-    return;
-  }
-  const gchar *sdp_type_string = json_object_get_string_member(data_json_object, "type");
-
-  if (!json_object_has_member(data_json_object, "sdp")) {
-    g_error ("Received SDP message without SDP string\n");
-    return;
-  }
-  const gchar *sdp_string = json_object_get_string_member(data_json_object, "sdp");
-
-  if (g_strcmp0(sdp_type_string, "answer") == 0) {
-    mPipeline->onAnswerReceived(sdp_string);
-  } else if (g_strcmp0(sdp_type_string, "offer") == 0) {
-    mPipeline->onOfferReceived(sdp_string);
+    g_error("Unknown type. %s\n", type_string.c_str());
   }
 }
 
-void WebRTCMain::parseIce(JsonObject *data_json_object)
+void WebRTCMain::parseIce(json& data_json_object)
 {
-  if (!json_object_has_member(data_json_object, "sdpMLineIndex")) {
+  if (!mPipeline) {
+    g_error("mPipeline is not initialized.\n");
+    return;
+  }
+
+  if (data_json_object.find("sdpMLineIndex") == data_json_object.end()) {
     g_error("Received ICE message without mline index\n\n");
     return;
   }
-  guint mline_index = json_object_get_int_member(data_json_object, "sdpMLineIndex");
-
-  if (!json_object_has_member(data_json_object, "candidate")) {
+  
+  if (data_json_object.find("candidate") == data_json_object.end() 
+      && !data_json_object["candidate"].is_string()) {
     g_error("Received ICE message without ICE candidate string\n\n");
     return;
   }
-  const gchar *candidate_string = json_object_get_string_member(data_json_object, "candidate");
 
-  mPipeline->onIceReceived(mline_index, candidate_string);
+  int mline_index = data_json_object["sdpMLineIndex"].get<int>();
+  std::string candidate_string = data_json_object["candidate"].get<std::string>();
+
+  mPipeline->onIceReceived(mline_index, candidate_string.c_str());
 }
 
 // WebsocketClientListener implements.
@@ -216,54 +201,50 @@ void WebRTCMain::onMessage(WebsocketClient *client, std::string& message)
 
 void WebRTCMain::onSendSdp(WebRTCPipeline *pipeline, gint type, gchar *sdp_string)
 {
-  JsonObject *sdp = json_object_new();
+  if (!sdp_string) {
+    g_assert_not_reached();
+  }
+
+  json j;
+  j["type"] = "sdp";
 
   if (type == GST_WEBRTC_SDP_TYPE_OFFER) {
-    json_object_set_string_member(sdp, "type", "offer");
+    j["data"] = json{
+      {"type", "offer"}, 
+      {"sdp", sdp_string}
+    };
   } else if (type == GST_WEBRTC_SDP_TYPE_ANSWER) {
-    json_object_set_string_member(sdp, "type", "answer");
+    j["data"] = json{
+      {"type", "answer"}, 
+      {"sdp", sdp_string}
+    };
   } else {
     g_assert_not_reached();
   }
 
-  json_object_set_string_member(sdp, "sdp", sdp_string);
-
-  JsonObject *sdp_json = json_object_new();
-  json_object_set_string_member(sdp_json, "type", "sdp");
-  json_object_set_object_member(sdp_json, "data", sdp);
-
-  gchar *json_string = get_string_from_json_object(sdp_json);
-  if (json_string) {
-    if (mClient) {
-      std::string message(json_string);
-      mClient->sendMessage(message);
-    }
-    g_free(json_string);
+  if (mClient) {
+    std::string msg = j.dump();
+    mClient->sendMessage(msg);
   }
-
-  json_object_unref(sdp_json);
 }
 
 void WebRTCMain::onSendIceCandidate(WebRTCPipeline *pipeline, guint mlineindex, gchar *candidate)
 {
-  JsonObject *ice_json = json_object_new();
-  json_object_set_string_member(ice_json, "type", "ice");
-
-  JsonObject *ice_data_json = json_object_new();
-  json_object_set_int_member(ice_data_json, "sdpMLineIndex", mlineindex);
-  json_object_set_string_member(ice_data_json, "candidate", candidate);
-  json_object_set_object_member(ice_json, "data", ice_data_json);
-
-  gchar *json_string = get_string_from_json_object(ice_json);
-  if (json_string) {
-    if (mClient) {
-      std::string message(json_string);
-      mClient->sendMessage(message);
-    }
-    g_free(json_string);
+  if (!candidate) {
+    g_assert_not_reached();
   }
 
-  json_object_unref(ice_json);
+  json j;
+  j["type"] = "ice";
+  j["data"] = json{
+    {"sdpMLineIndex", mlineindex}, 
+    {"candidate", candidate}
+  };
+
+  if (mClient) {
+    std::string msg = j.dump();
+    mClient->sendMessage(msg);
+  }
 }
 
 void WebRTCMain::onAddStream(WebRTCPipeline *pipeline, GstPad *pad)

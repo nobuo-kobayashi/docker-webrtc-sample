@@ -259,6 +259,16 @@ RUN cd ${BUILD_FOLDER} \
 && meson --buildtype=${BUILD_TYPE} --prefix=${PREFIX} build ${BUILD_OPTION} \
 && ninja -C build install
 
+# -----------------------------------------------------------------------------
+# nlohmann_json
+# -----------------------------------------------------------------------------
+
+RUN cd ${BUILD_FOLDER} \
+&& git clone --depth 1 https://github.com/nlohmann/json \
+&& cd json \
+&& meson --buildtype=${BUILD_TYPE} build \
+&& ninja -C build install
+
 # WebRTC への接続サンプルのビルド
 # ビルド用のフォルダを作成
 RUN mkdir -p ${WORK_FOLDER}/gst-webrtc-sample
