@@ -10,6 +10,39 @@ services:
       - ./signaling:/opt/signaling
     ports:
       - "9449:9449"
+  webrtc-turn-server:
+    build:
+      context: ./webrtc-turn-server
+    hostname: webrtc-turn-server
+    container_name: webrtc-turn-server
+    tty: true
+    ports:
+      - "3479:3479"
+      - "3479:3479/udp"
+      - "5349:5349"
+      - "5349:5349/udp"
+      - "49160-49200:49160-49200/udp"
+  # webrtc-janus:
+  #   build: 
+  #     context: ./webrtc-janus
+  #   hostname: webrtc-janus
+  #   container_name: webrtc-janus
+  #   volumes:
+  #     - ./data:/opt/data
+  #   privileged: true
+  #   devices:
+  #     - /dev
+  #   ports:
+  #     - "80:80"
+  #     - "7088:7088"
+  #     - "8088:8088"
+  #     - "8188:8188"
+  #     - "8989:8989"
+  #     - "8089:8089"
+  #     - "10000-10200:10000-10200/udp"
+  #     - "8000:8000"
+  #   environment:
+  #     - DOCKER_IP=${DOCKER_IP}
   webrtc:
     build: 
       context: ./webrtc-sample
@@ -27,5 +60,17 @@ services:
     tty: true
     depends_on:
       - "signaling"
+      # - "webrtc-janus"
     command: >
       /opt/gst-webrtc-sample/build/gst-webrtc-sample
+    # command: >
+    #   gst-launch-1.0 
+    #     audiotestsrc ! 
+    #       audioresample ! audio/x-raw,channels=1,rate=48000 ! 
+    #       opusenc bitrate=20000 ! 
+    #         rtpopuspay ! udpsink host=webrtc-janus port=5002 
+    #     videotestsrc ! 
+    #       video/x-raw,width=640,height=480,framerate=30/1 ! 
+    #       videoconvert ! timeoverlay ! 
+    #       vp8enc error-resilient=1 ! 
+    #         rtpvp8pay mtu=1500 ! udpsink host=webrtc-janus port=5004
