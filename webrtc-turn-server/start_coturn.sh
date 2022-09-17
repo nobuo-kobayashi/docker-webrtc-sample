@@ -13,4 +13,4 @@ echo "PublicIP: "$PUBLIC_IP
 echo "LocalIP:  "$LOCAL_IP
 echo "-----------------------"
 
-turnserver -c /usr/local/etc/turnserver.conf -u username:password -L $LOCAL_IP-X $PUBLIC_IP
+turnserver -c /usr/local/etc/turnserver.conf -u user1:pass1 -L $LOCAL_IP-X $PUBLIC_IP

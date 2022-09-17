@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nlohmann/json.hpp>
+#include <string>
 
 #include "gst-webrtc-pipeline.h"
 #include "gst-websocket-client.h"
@@ -11,6 +12,7 @@ class WebRTCMain : public WebsocketClientListener, WebRTCPipelineListener {
 private:
   WebsocketClient *mClient;
   WebRTCPipeline *mPipeline;
+  std::string mPipelineStr;
 
   void startPipeline();
   void stopPipeline();
@@ -19,7 +21,7 @@ private:
   void parseIce(json& data_json_object);
 
 public:
-  WebRTCMain();
+  WebRTCMain(std::string& pipelineStr);
   virtual ~WebRTCMain();
 
   void connectSignallingServer(std::string& url, std::string& origin);

@@ -8,12 +8,12 @@
         let vidstream = document.getElementById("stream");
         let config = {
           'iceServers': [
+            { urls: 'stun:stun.l.google.com:19302' },
             { 
               urls: 'turn:' + location.hostname + ':3479', 
               username: "username", 
               credential: "password"
             }
-            // { urls: 'stun:stun.l.google.com:19302' }
           ]
         };
         webrtc.playStream(vidstream, location.hostname, 9449, null, config, (msg) => {

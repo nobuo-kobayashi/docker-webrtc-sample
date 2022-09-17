@@ -10,18 +10,6 @@ services:
       - ./signaling:/opt/signaling
     ports:
       - "9449:9449"
-  webrtc-turn-server:
-    build:
-      context: ./webrtc-turn-server
-    hostname: webrtc-turn-server
-    container_name: webrtc-turn-server
-    tty: true
-    ports:
-      - "3479:3479"
-      - "3479:3479/udp"
-      - "5349:5349"
-      - "5349:5349/udp"
-      - "49160-49200:49160-49200/udp"
   webrtc:
     build: 
       context: ./webrtc-sample
