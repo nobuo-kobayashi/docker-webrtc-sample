@@ -36,7 +36,7 @@ http://{DOCKERのIPアドレス}:9449
 
 ## 配信する映像・音声の変更
 
-webrtc-sample/gst-webrtc-sample/src/main.cc のソースコードを変更することで、配信する映像・音声を変更することができます。
+docker-compose.yml を変更することで、配信する映像・音声を変更することができます。
 
 webrtcbin に格納する映像・音声を変更することで、切り替えることができます。
 
@@ -96,7 +96,7 @@ turn-server=turn://user1:pass1@localhost:3479 と設定されていますので�
 
 ```yml
     command: >
-      /opt/gst-webrtc-sample/build/gst-webrtc-sample "webrtcbin name=webrtcbin bundle-policy=max-bundle latency=100 turn-server=turn://user1:pass1@localhost:3479 
+      /opt/gst-webrtc-sample/build/gst-webrtc-sample "webrtcbin name=webrtcbin bundle-policy=max-bundle latency=100 ice-transport-policy=1 turn-server=turn://user1:pass1@localhost:3479  
         videotestsrc is-live=true 
          ! videoconvert 
          ! queue 
@@ -112,6 +112,23 @@ turn-server=turn://user1:pass1@localhost:3479 と設定されていますので�
          ! rtpopuspay 
          ! application/x-rtp,media=audio,encoding-name=OPUS,payload=97 
          ! webrtcbin. "
+```
+
+data/index.html に以下のようにして、TURN サーバへの設定が行われています。<br>
+サンプルでは、同じ端末に TURN サーバが存在することが前提になっていますので、変更する場合には下記の部分を修正します。
+
+```javascript
+let config = {
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { 
+      urls: 'turn:' + location.hostname + ':3479', 
+      username: "user2", 
+      credential: "pass2"
+    }
+  ],
+  iceTransportPolicy : "relay" 
+};
 ```
 
 ## ビルド

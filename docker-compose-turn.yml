@@ -40,7 +40,7 @@ services:
     depends_on:
       - "signaling"
     command: >
-      /opt/gst-webrtc-sample/build/gst-webrtc-sample "webrtcbin name=webrtcbin bundle-policy=max-bundle latency=100 turn-server=turn://user1:pass1@localhost:3479 
+      /opt/gst-webrtc-sample/build/gst-webrtc-sample "webrtcbin name=webrtcbin bundle-policy=max-bundle latency=100 ice-transport-policy=1 turn-server=turn://user1:pass1@localhost:3479 
         videotestsrc is-live=true 
          ! videoconvert 
          ! queue 

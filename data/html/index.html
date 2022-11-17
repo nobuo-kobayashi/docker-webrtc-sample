@@ -7,19 +7,20 @@
       window.onload = function() { 
         let vidstream = document.getElementById("stream");
         let config = {
-          'iceServers': [
+          iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
             { 
               urls: 'turn:' + location.hostname + ':3479', 
-              username: "username", 
-              credential: "password"
+              username: "user2", 
+              credential: "pass2",
             }
-          ]
+          ],
+          iceTransportPolicy : "relay" 
         };
         webrtc.playStream(vidstream, location.hostname, 9449, null, config, (msg) => {
           addText(msg);
         }, (errmsg) => {
-          console.error(errmsg);
+          console.log(errmsg);
         });
       };
 

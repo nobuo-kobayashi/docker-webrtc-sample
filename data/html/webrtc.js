@@ -30,9 +30,20 @@ var webrtc = (function(parent, global) {
    * @param {*} sdp 
    */
   function onIncomingSDP(sdp) { 
-    // console.log("Incoming SDP: " + JSON.stringify(sdp));
-    mWebrtcPeerConnection.setRemoteDescription(sdp).catch(mReportError);
-    mWebrtcPeerConnection.createAnswer().then(onLocalDescription).catch(mReportError);
+    console.log("Incoming SDP: " + JSON.stringify(sdp));
+
+    switch (sdp.type) {
+      case 'answer':
+        mWebrtcPeerConnection.setRemoteDescription(sdp).catch(mReportError);
+        break;
+      case 'offer':
+        mWebrtcPeerConnection.setRemoteDescription(sdp).catch(mReportError);
+        mWebrtcPeerConnection.createAnswer().then(onLocalDescription).catch(mReportError);
+        break;
+      default:
+        console.log("Unknown type. type=" + sdp.type);
+        break;
+    }
   } 
 
   /**
@@ -43,7 +54,7 @@ var webrtc = (function(parent, global) {
    * @param {*} ice 
    */
   function onIncomingICE(ice) { 
-    // console.log("Incoming ICE: " + JSON.stringify(ice));
+    console.log("Incoming ICE: " + JSON.stringify(ice));
     let candidate = new RTCIceCandidate(ice);
     mWebrtcPeerConnection.addIceCandidate(candidate).catch(mReportError);
   } 
@@ -170,7 +181,7 @@ var webrtc = (function(parent, global) {
     mWebrtcPeerConnection.onicecandidate = onIceCandidate;
     mWebrtcPeerConnection.ondatachannel = onDataChannel;
     
-    mSendDataChannel = mWebrtcPeerConnection.createDataChannel('channel', null);
+    mSendDataChannel = mWebrtcPeerConnection.createDataChannel('datachannel', null);
     mSendDataChannel.onmessage = function (event) {
       console.log('onmessage', event.data);
     };
@@ -206,12 +217,33 @@ var webrtc = (function(parent, global) {
    */
   function createWebsocket(wsUrl) {
     mWebsocketConnection = new WebSocket(wsUrl);
-    mWebsocketConnection.addEventListener('open', function (event) {});
+    mWebsocketConnection.addEventListener('open', function (event) {
+      // ブラウザ側から offer を行う場合は以下のメソッドを呼び出す
+      // sendOffer();
+    });
     mWebsocketConnection.addEventListener('close', function (event) {
       stopStream();
     });
     mWebsocketConnection.addEventListener('message', onWebsocketMessage);
   }
+
+  function sendOffer() {
+    // 映像・音声のデータを受信するだけにの設定を行います。
+    const videoTransceiver = mWebrtcPeerConnection.addTransceiver('video');
+    videoTransceiver.direction = 'recvonly';
+    const audioTransceiver = mWebrtcPeerConnection.addTransceiver('audio');
+    audioTransceiver.direction = 'recvonly';
+
+    mWebrtcPeerConnection.createOffer().then((sdp) => {
+      mWebrtcPeerConnection.setLocalDescription(sdp).then(function() { 
+        mWebsocketConnection.send(JSON.stringify({
+          'type': 'sdp', 
+          'data': sdp
+        }));
+      }).catch(mReportError);
+    });
+  }
+  parent.sendOffer = sendOffer;
 
   /**
    * Websocket の後始末を行う。
