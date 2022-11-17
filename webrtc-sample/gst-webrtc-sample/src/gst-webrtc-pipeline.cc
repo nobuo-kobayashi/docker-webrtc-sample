@@ -42,6 +42,17 @@ void WebRTCPipeline::startPipeline(std::string& bin)
     return;
   }
 
+  // パイプラインに、turn-server が指定されているときに、add-turn-server を行うと動作しなくなります。
+  // ice-transport-policy も同じです。
+  // gboolean ret = FALSE;
+  // g_signal_emit_by_name(mWebRTCBin, "add-turn-server", "turn://user1:pass1@192.168.2.99:3479", &ret);
+  // if (!ret) {
+  //   g_printerr("Failed to add a turn server.\n");
+  //   return;
+  // }
+  // // 強制的に TURN サーバを使用するフラグ
+  // g_object_set(G_OBJECT(mWebRTCBin), "ice-transport-policy", GST_WEBRTC_ICE_TRANSPORT_POLICY_RELAY, NULL);
+
   // 送信専用に設定
   GArray *transceivers = NULL;
   g_signal_emit_by_name(mWebRTCBin, "get-transceivers", &transceivers);
